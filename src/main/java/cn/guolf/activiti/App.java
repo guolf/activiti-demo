@@ -2,6 +2,7 @@ package cn.guolf.activiti;
 
 import org.activiti.engine.*;
 import org.activiti.engine.history.HistoricActivityInstance;
+import org.activiti.engine.history.HistoricVariableInstance;
 import org.activiti.engine.impl.cfg.StandaloneProcessEngineConfiguration;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.ProcessDefinition;
@@ -65,20 +66,25 @@ public class App {
         System.out.println("taskList1 = " + taskList1);
 
         Task task1 = taskList1.get(0);
-        taskService.complete(task1.getId(),mapConfirm);
+        taskService.setVariablesLocal(task1.getId(),mapConfirm);
+        taskService.complete(task1.getId());
 
         List<Task> taskList2 = taskService.createTaskQuery().taskAssignee("jeck").orderByTaskCreateTime().desc().list();
         System.out.println("taskList2 = " + taskList2);
         Map mapConfirm1 = new HashMap();
         mapConfirm1.put("confirmSts",1);
         Task task2 = taskList2.get(0);
-        taskService.complete(task2.getId(),mapConfirm1);
+//        taskService.complete(task2.getId(),mapConfirm1);
+        taskService.setVariablesLocal(task2.getId(),mapConfirm1);
+        taskService.complete(task2.getId());
 
         List<Task> taskList3 = taskService.createTaskQuery().taskAssignee("tom").orderByTaskCreateTime().desc().list();
         System.out.println("taskList3 = " + taskList3);
 
         Task task3 = taskList3.get(0);
-        taskService.complete(task3.getId(),mapConfirm);
+//        taskService.complete(task3.getId(),mapConfirm);
+        taskService.setVariablesLocal(task3.getId(),mapConfirm1);
+        taskService.complete(task3.getId());
         // ============ 会签任务结束 ===========
 
         // 部门主任
@@ -162,6 +168,16 @@ public class App {
             System.out.println("开始时间：" + historicActivityInstance.getStartTime());
             System.out.println("结束时间：" + historicActivityInstance.getEndTime());
             System.out.println("===========================");
+        }
+
+        // 历史任务变量查询
+        List<HistoricVariableInstance> historicVariableInstances = processEngine.getHistoryService()
+                .createHistoricVariableInstanceQuery()
+                .processInstanceId("5") // 指定流程实例id
+                .list();
+        for (HistoricVariableInstance historicVariableInstance : historicVariableInstances) {
+            System.out.println("name = " + historicVariableInstance.getVariableName() + ", value = " + historicVariableInstance.getValue()
+              + ",taskId = " + historicVariableInstance.getTaskId() + " id," + historicVariableInstance.getId());
         }
 
     }
