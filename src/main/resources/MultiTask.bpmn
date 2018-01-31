@@ -71,7 +71,11 @@
     <userTask id="usertask9" name="分管领导审批" activiti:assignee="leader"></userTask>
     <sequenceFlow id="flow21" sourceRef="subprocess1" targetRef="usertask7"></sequenceFlow>
     <sequenceFlow id="flow22" sourceRef="usertask7" targetRef="usertask8"></sequenceFlow>
-    <endEvent id="endevent3" name="End"></endEvent>
+    <endEvent id="endevent3" name="End">
+      <extensionElements>
+        <activiti:executionListener event="start" class="cn.guolf.activiti.EndTaskListener"></activiti:executionListener>
+      </extensionElements>
+    </endEvent>
     <sequenceFlow id="flow24" sourceRef="usertask9" targetRef="endevent3"></sequenceFlow>
     <userTask id="usertask10" name="公示确认" activiti:assignee="${publicity}">
       <multiInstanceLoopCharacteristics isSequential="false" activiti:collection="${publicityList}" activiti:elementVariable="publicity"></multiInstanceLoopCharacteristics>
@@ -100,6 +104,7 @@
     <sequenceFlow id="flow46" sourceRef="exclusivegateway5" targetRef="usertask11">
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!confirmPass}]]></conditionExpression>
     </sequenceFlow>
+    <sequenceFlow id="flow47" sourceRef="usertask10" targetRef="usertask9"></sequenceFlow>
   </process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_myProcess">
     <bpmndi:BPMNPlane bpmnElement="myProcess" id="BPMNPlane_myProcess">
@@ -291,6 +296,10 @@
         <omgdi:waypoint x="305.0" y="62.0"></omgdi:waypoint>
         <omgdi:waypoint x="308.0" y="27.0"></omgdi:waypoint>
         <omgdi:waypoint x="676.0" y="28.0"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow47" id="BPMNEdge_flow47">
+        <omgdi:waypoint x="352.0" y="739.0"></omgdi:waypoint>
+        <omgdi:waypoint x="352.0" y="810.0"></omgdi:waypoint>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>
   </bpmndi:BPMNDiagram>

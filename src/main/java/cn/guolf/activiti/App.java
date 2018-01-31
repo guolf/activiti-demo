@@ -2,13 +2,12 @@ package cn.guolf.activiti;
 
 import org.activiti.engine.*;
 import org.activiti.engine.history.HistoricActivityInstance;
-import org.activiti.engine.history.HistoricVariableInstance;
+import org.activiti.engine.history.HistoricTaskInstance;
 import org.activiti.engine.impl.cfg.StandaloneProcessEngineConfiguration;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
-import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,8 +15,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Activit工作流demo
+ * 积分申报流程demo
  * 包含功能:多实例会签、子流程并行审批、动态设置下一节点执行人员、任务超时自动完成
+ * @author guolf
  */
 public class App {
     public static void main(String[] args) throws InterruptedException {
@@ -42,15 +42,18 @@ public class App {
         System.out.println("流程名称 ： [" + processDefinition.getName() + "]， 流程ID ： ["
                 + processDefinition.getId() + "], 流程KEY : " + processDefinition.getKey());
 
+        IdentityService identityService = processEngine.getIdentityService();
         // 启动流程
         RuntimeService runtimeService = processEngine.getRuntimeService();
-        List<String> assigneeList = new ArrayList<String>(); //分配任务的人员
+        // 分配任务的人员
+        List<String> assigneeList = new ArrayList<String>();
         assigneeList.add("tom");
         assigneeList.add("jeck");
         assigneeList.add("mary");
-        Map<String, Object> vars = new HashMap<String, Object>(); //参数
+        Map<String, Object> vars = new HashMap<String, Object>();
         vars.put("assigneeList", assigneeList);
-        ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("myProcess", vars);
+        identityService.setAuthenticatedUserId("createUserId");
+        ProcessInstance processInstance = runtimeService.startProcessInstanceByKey("myProcess", "Key001", vars);
 
         System.out.println("流程实例ID = " + processInstance.getId());
         System.out.println("正在活动的流程节点ID = " + processInstance.getActivityId());
@@ -59,31 +62,29 @@ public class App {
         // 查询指定人的任务
         // ============ 会签任务开始 ===========
         Map mapConfirm = new HashMap();
-        mapConfirm.put("confirmSts",0);
+        mapConfirm.put("confirmSts", 1);
 
         TaskService taskService = processEngine.getTaskService();
         List<Task> taskList1 = taskService.createTaskQuery().taskAssignee("mary").orderByTaskCreateTime().desc().list();
         System.out.println("taskList1 = " + taskList1);
 
         Task task1 = taskList1.get(0);
-        taskService.setVariablesLocal(task1.getId(),mapConfirm);
+        taskService.setVariablesLocal(task1.getId(), mapConfirm);
         taskService.complete(task1.getId());
 
         List<Task> taskList2 = taskService.createTaskQuery().taskAssignee("jeck").orderByTaskCreateTime().desc().list();
         System.out.println("taskList2 = " + taskList2);
         Map mapConfirm1 = new HashMap();
-        mapConfirm1.put("confirmSts",1);
+        mapConfirm1.put("confirmSts", 1);
         Task task2 = taskList2.get(0);
-//        taskService.complete(task2.getId(),mapConfirm1);
-        taskService.setVariablesLocal(task2.getId(),mapConfirm1);
+        taskService.setVariablesLocal(task2.getId(), mapConfirm1);
         taskService.complete(task2.getId());
 
         List<Task> taskList3 = taskService.createTaskQuery().taskAssignee("tom").orderByTaskCreateTime().desc().list();
         System.out.println("taskList3 = " + taskList3);
 
         Task task3 = taskList3.get(0);
-//        taskService.complete(task3.getId(),mapConfirm);
-        taskService.setVariablesLocal(task3.getId(),mapConfirm1);
+        taskService.setVariablesLocal(task3.getId(), mapConfirm1);
         taskService.complete(task3.getId());
         // ============ 会签任务结束 ===========
 
@@ -97,30 +98,30 @@ public class App {
         // 市场专员
         List<Task> taskListSczy = taskService.createTaskQuery().taskAssignee("sczy").orderByTaskCreateTime().desc().list();
         System.out.println("taskListSczy = " + taskListSczy);
-        Map<String,Object> map = new HashMap<String, Object>();
-        map.put("pass",true);
-        taskService.complete(taskListSczy.get(0).getId(),map);
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("pass", true);
+        taskService.complete(taskListSczy.get(0).getId(), map);
 
         // 市场主任
         List<Task> taskListSczr = taskService.createTaskQuery().taskAssignee("sczr").orderByTaskCreateTime().desc().list();
-        Map<String,Object> map3 = new HashMap<String, Object>();
-        map3.put("pass3",true);
+        Map<String, Object> map3 = new HashMap<String, Object>();
+        map3.put("pass3", true);
         System.out.println("taskListSczr = " + taskListSczr);
-        taskService.complete(taskListSczr.get(0).getId(),map3);
+        taskService.complete(taskListSczr.get(0).getId(), map3);
 
         // 财务专员
         List<Task> taskListCwzy = taskService.createTaskQuery().taskAssignee("cwzy").orderByTaskCreateTime().desc().list();
         System.out.println("taskListCwzy = " + taskListCwzy);
-        Map<String,Object> map1 = new HashMap<String, Object>();
-        map1.put("pass1",true);
-        taskService.complete(taskListCwzy.get(0).getId(),map1);
+        Map<String, Object> map1 = new HashMap<String, Object>();
+        map1.put("pass1", true);
+        taskService.complete(taskListCwzy.get(0).getId(), map1);
 
         // 财务主任
         List<Task> taskListCwzr = taskService.createTaskQuery().taskAssignee("cwzr").orderByTaskCreateTime().desc().list();
         System.out.println("taskListCwzr = " + taskListCwzr);
-        Map<String,Object> map4 = new HashMap<String, Object>();
-        map4.put("pass4",true);
-        taskService.complete(taskListCwzr.get(0).getId(),map4);
+        Map<String, Object> map4 = new HashMap<String, Object>();
+        map4.put("pass4", true);
+        taskService.complete(taskListCwzr.get(0).getId(), map4);
 
         List<Task> taskMe = taskService.createTaskQuery().taskAssignee("me").orderByTaskCreateTime().desc().list();
         System.out.println("taskMe = " + taskMe);
@@ -143,7 +144,7 @@ public class App {
         System.out.println("taskListPublic = " + taskListPublic);
         taskService.complete(taskListPublic.get(0).getId());
 
-        Thread.sleep(1000*10);
+        Thread.sleep(1000 * 10);
 
         // 分管领导确认
         List<Task> taskListLeader = taskService.createTaskQuery().taskAssignee("leader").orderByTaskCreateTime().desc().list();
@@ -153,9 +154,9 @@ public class App {
         // ==================流程结束======================
 
         // 历史任务查询
-        List<HistoricActivityInstance> historicActivityInstances = processEngine.getHistoryService() // 历史任务Service
-                .createHistoricActivityInstanceQuery() // 创建历史活动实例查询
-                .processInstanceId("5") // 指定流程实例id
+        List<HistoricActivityInstance> historicActivityInstances = processEngine.getHistoryService()
+                // 创建历史活动实例查询
+                .createHistoricActivityInstanceQuery()
                 //.finished() // 查询已经完成的任务
                 .orderByHistoricActivityInstanceEndTime()
                 .asc()
@@ -170,14 +171,8 @@ public class App {
             System.out.println("===========================");
         }
 
-        // 历史任务变量查询
-        List<HistoricVariableInstance> historicVariableInstances = processEngine.getHistoryService()
-                .createHistoricVariableInstanceQuery()
-                .processInstanceId("5") // 指定流程实例id
-                .list();
-        for (HistoricVariableInstance historicVariableInstance : historicVariableInstances) {
-            System.out.println("name = " + historicVariableInstance.getVariableName() + ", value = " + historicVariableInstance.getValue()
-              + ",taskId = " + historicVariableInstance.getTaskId() + " id," + historicVariableInstance.getId());
+        for (HistoricTaskInstance historicTaskInstance : processEngine.getHistoryService().createHistoricTaskInstanceQuery().taskDefinitionKey("usertask1").list()) {
+            System.out.println("historicTaskInstance = " + historicTaskInstance);
         }
 
     }
